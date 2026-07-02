@@ -178,17 +178,18 @@
       <label>🏷️ タグ（複数選択可）</label>
       <div class="tag-container" id="tagContainer"></div>
     </div>
+    
+    <div class="form-group">
+      <label for="inputPhotos">📸 写真（複数OK）</label>
+      <input type="file" id="inputPhotos" multiple accept="image/*">
+      <div id="photoPreview" class="photo-preview"></div>
+    </div>
 
     <div class="form-group">
       <label for="inputComment">📝 コメント</label>
       <textarea id="inputComment" placeholder="作業内容、感想など..."></textarea>
     </div>
 
-    <div class="form-group">
-      <label for="inputPhotos">📸 写真（複数OK）</label>
-      <input type="file" id="inputPhotos" multiple accept="image/*">
-      <div id="photoPreview" class="photo-preview"></div>
-    </div>
 
     <div class="submit-section">
       <button class="btn btn-success" onclick="saveRecord()">✅ 記録を保存</button>
