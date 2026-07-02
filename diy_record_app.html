@@ -3,16 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🔨 DIY記録アプリ</title>
+  <title>🔨 maker-journal</title>
   <style>
-    /* ============================================
-       全体的なスタイル設定
-       ============================================ */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Segoe UI', 'メイリオ', sans-serif;
@@ -20,9 +13,7 @@
       color: #2c3e50;
     }
 
-    /* ============================================
-       ヘッダー（タイトルとボタン）
-       ============================================ */
+    /* ヘッダー */
     .header {
       background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
       color: white;
@@ -35,673 +26,360 @@
       top: 0;
       z-index: 100;
     }
-
-    .header h1 {
-      font-size: 24px;
-      margin: 0;
-    }
+    .header h1 { font-size: 22px; margin: 0; }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+    .user-name { font-size: 12px; opacity: 0.85; }
 
     .btn {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      font-weight: bold;
-      transition: all 0.3s ease;
+      padding: 8px 14px; border: none; border-radius: 4px;
+      cursor: pointer; font-size: 14px; font-weight: bold;
+      transition: all 0.2s ease;
     }
+    .btn-primary { background-color: #3498db; color: white; }
+    .btn-primary:hover { background-color: #2980b9; }
+    .btn-danger { background-color: #e74c3c; color: white; }
+    .btn-success { background-color: #27ae60; color: white; }
+    .btn-ghost { background: rgba(255,255,255,0.15); color: white; }
 
-    .btn-primary {
-      background-color: #3498db;
-      color: white;
+    /* ログイン画面 */
+    .login-screen {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; min-height: 80vh; padding: 24px; text-align: center;
     }
-
-    .btn-primary:hover {
-      background-color: #2980b9;
-      transform: translateY(-2px);
+    .login-screen h2 { font-size: 22px; margin-bottom: 12px; }
+    .login-screen p { color: #7f8c8d; margin-bottom: 24px; line-height: 1.7; }
+    .google-btn {
+      display: inline-flex; align-items: center; gap: 12px;
+      background: white; border: 1px solid #dadce0; border-radius: 6px;
+      padding: 12px 20px; font-size: 15px; font-weight: bold;
+      color: #3c4043; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    .google-btn:hover { background: #f8f9fa; }
+    .google-btn img { width: 20px; height: 20px; }
 
-    .btn-danger {
-      background-color: #e74c3c;
-      color: white;
-    }
+    /* セクション */
+    .section { display: none; padding: 16px; }
+    .section.active { display: block; }
+    .section-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; }
 
-    .btn-danger:hover {
-      background-color: #c0392b;
-    }
-
-    .btn-success {
-      background-color: #27ae60;
-      color: white;
-    }
-
-    .btn-success:hover {
-      background-color: #229954;
-    }
-
-    /* ============================================
-       セクション（登録フォーム / タイムライン）
-       ============================================ */
-    .section {
-      display: none;
-      padding: 16px;
-    }
-
-    .section.active {
-      display: block;
-    }
-
-    .section-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 16px;
-      color: #2c3e50;
-    }
-
-    /* ============================================
-       フォーム関連
-       ============================================ */
+    /* フォーム */
     .form-group {
-      margin-bottom: 16px;
-      background: white;
-      padding: 12px;
-      border-radius: 4px;
+      margin-bottom: 16px; background: white; padding: 12px; border-radius: 4px;
     }
-
     .form-group label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 8px;
-      font-size: 14px;
-      color: #2c3e50;
+      display: block; font-weight: bold; margin-bottom: 8px; font-size: 14px;
     }
-
-    .form-group input,
-    .form-group textarea {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #bdc3c7;
-      border-radius: 4px;
-      font-size: 14px;
-      font-family: inherit;
-      line-height: 1.5;
+    .form-group input, .form-group textarea {
+      width: 100%; padding: 10px; border: 1px solid #bdc3c7;
+      border-radius: 4px; font-size: 14px; font-family: inherit; line-height: 1.5;
     }
+    .form-group textarea { resize: vertical; min-height: 100px; }
 
-    .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus {
-      outline: none;
-      border-color: #3498db;
-      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
-    }
-
-    /* ============================================
-       写真プレビュー
-       ============================================ */
     .photo-preview {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-top: 8px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;
     }
-
-    .photo-item {
-      position: relative;
-      width: 100%;
-      padding-top: 100%; /* 正方形にする */
-    }
-
+    .photo-item { position: relative; width: 100%; padding-top: 100%; }
     .photo-item img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 4px;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 4px;
     }
-
     .photo-remove-btn {
-      position: absolute;
-      top: 4px;
-      right: 4px;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 32px;
-      height: 32px;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(0,0,0,0.6); color: white; border: none;
+      border-radius: 50%; width: 28px; height: 28px; font-size: 14px; cursor: pointer;
     }
 
-    .photo-remove-btn:hover {
-      background: rgba(0, 0, 0, 0.8);
-    }
-
-    /* ============================================
-       タグ選択
-       ============================================ */
     .tag-container {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 8px;
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px;
     }
-
     .tag-btn {
-      padding: 10px;
-      border: 2px solid #bdc3c7;
-      background: white;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: all 0.2s;
-      font-weight: 500;
+      padding: 10px; border: 2px solid #bdc3c7; background: white;
+      border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;
     }
+    .tag-btn.active { background-color: #3498db; color: white; border-color: #3498db; }
 
-    .tag-btn:hover {
-      border-color: #3498db;
+    .submit-section { display: flex; gap: 8px; margin-top: 16px; }
+    .submit-section button { flex: 1; padding: 12px; }
+
+    /* タイムライン */
+    .timeline-controls { background: white; padding: 12px; border-radius: 4px; margin-bottom: 12px; }
+    .month-selector { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .month-selector button { background: #ecf0f1; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+    .month-display { font-size: 18px; font-weight: bold; }
+    .tag-filter { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; }
+    .filter-tag { padding: 8px 12px; background: white; border: 2px solid #bdc3c7; border-radius: 20px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+    .filter-tag.active { background: #3498db; color: white; border-color: #3498db; }
+
+    .records-list { display: flex; flex-direction: column; gap: 12px; }
+    .record-card { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .record-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 8px; flex-wrap: wrap; }
+    .record-date { font-size: 12px; color: #7f8c8d; font-weight: 500; }
+    .record-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+    .record-tag { background: #ecf0f1; padding: 2px 8px; border-radius: 12px; font-size: 11px; }
+    .record-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+    .record-photo { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; }
+    .record-comment { font-size: 14px; line-height: 1.6; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+    .record-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+
+    .empty-message { text-align: center; color: #95a5a6; padding: 32px 16px; font-size: 14px; }
+    .footer { padding: 16px; text-align: center; color: #7f8c8d; font-size: 12px; border-top: 1px solid #ecf0f1; margin-top: 16px; }
+
+    /* ローディング */
+    .loading-overlay {
+      display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(255,255,255,0.85); z-index: 2000;
+      align-items: center; justify-content: center; flex-direction: column; gap: 12px;
     }
-
-    .tag-btn.active {
-      background-color: #3498db;
-      color: white;
-      border-color: #3498db;
+    .loading-overlay.active { display: flex; }
+    .spinner {
+      width: 42px; height: 42px; border: 4px solid #ecf0f1;
+      border-top-color: #3498db; border-radius: 50%; animation: spin 0.8s linear infinite;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 14px; color: #2c3e50; }
 
-    /* ============================================
-       送信ボタン
-       ============================================ */
-    .submit-section {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .submit-section button {
-      flex: 1;
-      padding: 12px;
-      font-size: 14px;
-      font-weight: bold;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    /* ============================================
-       タイムラインビュー
-       ============================================ */
-    .timeline-controls {
-      background: white;
-      padding: 12px;
-      border-radius: 4px;
-      margin-bottom: 12px;
-    }
-
-    /* 月選択 */
-    .month-selector {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
-
-    .month-selector button {
-      background: #ecf0f1;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: background 0.2s;
-    }
-
-    .month-selector button:hover {
-      background: #bdc3c7;
-    }
-
-    .month-display {
-      font-size: 18px;
-      font-weight: bold;
-      color: #2c3e50;
-    }
-
-    /* タグフィルター */
-    .tag-filter {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-top: 8px;
-    }
-
-    .filter-tag {
-      padding: 8px 12px;
-      background: white;
-      border: 2px solid #bdc3c7;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 12px;
-      white-space: nowrap;
-      transition: all 0.2s;
-    }
-
-    .filter-tag:hover {
-      border-color: #3498db;
-    }
-
-    .filter-tag.active {
-      background: #3498db;
-      color: white;
-      border-color: #3498db;
-    }
-
-    /* ============================================
-       記録カード
-       ============================================ */
-    .records-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .record-card {
-      background: white;
-      border-radius: 8px;
-      padding: 12px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      transition: box-shadow 0.2s;
-    }
-
-    .record-card:hover {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
-
-    /* カード上部：日付とタグ */
-    .record-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 8px;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .record-date {
-      font-size: 12px;
-      color: #7f8c8d;
-      font-weight: 500;
-    }
-
-    .record-tags {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-
-    .record-tag {
-      background: #ecf0f1;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      color: #2c3e50;
-      font-weight: 500;
-    }
-
-    /* カード内：写真ギャラリー */
-    .record-photos {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .record-photo {
-      width: 100%;
-      aspect-ratio: 1;
-      object-fit: cover;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-
-    .record-photo:hover {
-      transform: scale(1.02);
-    }
-
-    /* カード内：コメント */
-    .record-comment {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #2c3e50;
-      margin-bottom: 8px;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    /* カード内：削除ボタン */
-    .record-delete {
-      background: #e74c3c;
-      color: white;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .record-delete:hover {
-      background: #c0392b;
-    }
-
-    /* ============================================
-       空状態メッセージ
-       ============================================ */
-    .empty-message {
-      text-align: center;
-      color: #95a5a6;
-      padding: 32px 16px;
-      font-size: 14px;
-    }
-
-    /* ============================================
-       フッター
-       ============================================ */
-    .footer {
-      padding: 16px;
-      text-align: center;
-      color: #7f8c8d;
-      font-size: 12px;
-      border-top: 1px solid #ecf0f1;
-      margin-top: 16px;
-    }
-
-    /* ============================================
-       写真拡大表示（モーダル）
-       ============================================ */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal.active {
-      display: flex;
-    }
-
-    .modal-img {
-      max-width: 90%;
-      max-height: 90%;
-      object-fit: contain;
-    }
-
-    .modal-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: none;
-      font-size: 28px;
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    /* ============================================
-       レスポンシブ対応
-       ============================================ */
-    @media (min-width: 768px) {
-      .tag-container {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .photo-preview {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .record-photos {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
+    /* 写真拡大 */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-img { max-width: 90%; max-height: 90%; object-fit: contain; }
+    .modal-close { position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.2); color: white; border: none; font-size: 28px; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; }
   </style>
 </head>
 <body>
 
-  <!-- ============================================
-       ヘッダー
-       ============================================ -->
+  <!-- ヘッダー -->
   <div class="header">
-    <h1>🔨 DIY記録</h1>
-    <button class="btn btn-primary" onclick="toggleView()">
-      <span id="toggleText">➕ 新規登録</span>
+    <h1>🔨 maker-journal</h1>
+    <div class="header-right" id="headerRight" style="display:none;">
+      <span class="user-name" id="userName"></span>
+      <button class="btn btn-primary" onclick="toggleView()"><span id="toggleText">➕ 新規登録</span></button>
+      <button class="btn btn-ghost" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+
+  <!-- ログイン画面 -->
+  <div id="loginScreen" class="login-screen">
+    <h2>maker-journal へようこそ</h2>
+    <p>あなたのDIY記録を、安全にクラウドへ。<br>スマホでもPCでも、同じ記録が見られます。</p>
+    <button class="google-btn" onclick="doLogin()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+      Googleでログイン
     </button>
   </div>
 
-  <!-- ============================================
-       登録フォームセクション
-       ============================================ -->
-  <div id="formSection" class="section active">
+  <!-- 登録フォーム -->
+  <div id="formSection" class="section">
     <h2 class="section-title">新しい記録を追加</h2>
 
-    <!-- 日付入力 -->
     <div class="form-group">
       <label for="inputDate">📅 日付</label>
       <input type="date" id="inputDate">
     </div>
 
-    <!-- 写真アップロード -->
-    <div class="form-group">
-      <label for="inputPhotos">📸 写真（複数OK）</label>
-      <input type="file" id="inputPhotos" multiple accept="image/*">
-      <div id="photoPreview" class="photo-preview"></div>
-    </div>
-    
-    <!-- タグ選択 -->
     <div class="form-group">
       <label>🏷️ タグ（複数選択可）</label>
       <div class="tag-container" id="tagContainer"></div>
     </div>
-    
-    <!-- コメント入力 -->
+
     <div class="form-group">
       <label for="inputComment">📝 コメント</label>
       <textarea id="inputComment" placeholder="作業内容、感想など..."></textarea>
     </div>
 
+    <div class="form-group">
+      <label for="inputPhotos">📸 写真（複数OK）</label>
+      <input type="file" id="inputPhotos" multiple accept="image/*">
+      <div id="photoPreview" class="photo-preview"></div>
+    </div>
 
-
-    <!-- ボタン -->
     <div class="submit-section">
       <button class="btn btn-success" onclick="saveRecord()">✅ 記録を保存</button>
       <button class="btn btn-primary" onclick="resetForm()">🔄 リセット</button>
     </div>
   </div>
 
-  <!-- ============================================
-       タイムラインセクション
-       ============================================ -->
+  <!-- タイムライン -->
   <div id="timelineSection" class="section">
     <h2 class="section-title">📖 タイムライン</h2>
-
-    <!-- 月選択とタグフィルター -->
     <div class="timeline-controls">
-      <!-- 月選択 -->
       <div class="month-selector">
         <button onclick="prevMonth()">◀</button>
         <div class="month-display" id="monthDisplay"></div>
         <button onclick="nextMonth()">▶</button>
       </div>
-
-      <!-- タグフィルター -->
       <div class="tag-filter" id="tagFilter"></div>
     </div>
-
-    <!-- 記録一覧 -->
     <div id="recordsList" class="records-list"></div>
   </div>
 
   <!-- フッター -->
-  <div class="footer">
+  <div class="footer" id="footer" style="display:none;">
     <p>登録済み記録: <strong id="recordCount">0</strong>件</p>
   </div>
 
-  <!-- 写真拡大表示用モーダル -->
+  <!-- ローディング -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">処理中...</div>
+  </div>
+
+  <!-- 写真拡大 -->
   <div id="photoModal" class="modal" onclick="closePhotoModal()">
     <button class="modal-close" onclick="closePhotoModal()">✕</button>
     <img id="modalImg" class="modal-img" alt="">
   </div>
 
   <!-- ============================================
-       JavaScriptコード（アプリの動作ロジック）
+       ここからプログラム（Firebase版）
        ============================================ -->
-  <script>
+  <script type="module">
+    // Firebase の機能を読み込む
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import {
+      getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+      getFirestore, collection, doc, setDoc, getDocs, deleteDoc, query, orderBy
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      getStorage, ref, uploadString, getDownloadURL, deleteObject
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-storage.js";
+
     // ============================================
-    // 設定と初期化
+    // ★★★ ここにあなたの firebaseConfig を貼ってください ★★★
+    // Firebaseコンソールの「プロジェクトの設定 → マイアプリ」で確認できます。
+    // 下の { ... } の中身を、あなたのものに丸ごと置き換えてください。
+    // ============================================
+    const firebaseConfig = {
+    apiKey: "AIzaSyCmzu5bqkzI5Sh3YS0YS5VQL0W5HtBChYI",
+    authDomain: "maker-journal-9c546.firebaseapp.com",
+    projectId: "maker-journal-9c546",
+    storageBucket: "maker-journal-9c546.firebasestorage.app",
+    messagingSenderId: "923766149946",
+    appId: "1:923766149946:web:e9abeb4cc84fae841c7603"
+  };
     // ============================================
 
-    // タグ定義（ここでタグを追加/削除できます）
+    // Firebase を初期化
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const provider = new GoogleAuthProvider();
+
+    // タグ定義（変えたいときはここ）
     const TAGS = ['作品集', '計画', 'やってみたい', 'スキル', '治具', '工具'];
 
-    // アプリの状態を管理する変数
-    let records = []; // 記録一覧
-    let selectedPhotos = []; // 選択中の写真（Base64）
-    let selectedTags = []; // 選択中のタグ
-    let currentMonth = new Date(); // 現在選択中の月
-    let selectedFilter = null; // フィルター中のタグ
+    // 状態
+    let currentUser = null;
+    let records = [];
+    let selectedPhotos = [];   // 圧縮済みBase64の配列
+    let selectedTags = [];
+    let currentMonth = new Date();
+    let selectedFilter = null;
+
+    // ---- 画面の要素 ----
+    const loginScreen = document.getElementById('loginScreen');
+    const headerRight = document.getElementById('headerRight');
+    const formSection = document.getElementById('formSection');
+    const timelineSection = document.getElementById('timelineSection');
+    const footer = document.getElementById('footer');
 
     // ============================================
-    // ページ読み込み時の処理
+    // ログイン処理
     // ============================================
-    window.addEventListener('DOMContentLoaded', () => {
-      initializeApp();
+    window.doLogin = function () {
+      signInWithPopup(auth, provider).catch(err => {
+        alert('ログインに失敗しました: ' + err.message);
+        console.error(err);
+      });
+    };
+
+    window.doLogout = function () {
+      signOut(auth);
+    };
+
+    // ログイン状態が変わったとき
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      if (user) {
+        // ログイン済み
+        loginScreen.style.display = 'none';
+        headerRight.style.display = 'flex';
+        footer.style.display = 'block';
+        document.getElementById('userName').textContent = user.displayName || user.email;
+
+        setupUI();
+        loadRecords();
+        showTimeline();
+      } else {
+        // 未ログイン
+        loginScreen.style.display = 'flex';
+        headerRight.style.display = 'none';
+        footer.style.display = 'none';
+        formSection.classList.remove('active');
+        timelineSection.classList.remove('active');
+      }
     });
 
-    function initializeApp() {
-      // 1. ローカルストレージからデータを読み込む
-      loadRecords();
-
-      // 2. UIを初期化
-      setDefaultDate();
-      renderTagButtons();
-      renderTagFilter();
-      renderTimeline();
-      updateRecordCount();
-
-      console.log('✅ アプリを初期化しました。登録済み記録:', records.length);
-    }
-
     // ============================================
-    // フォーム関連の関数
+    // 初期UI（タグボタン・日付・写真input）
     // ============================================
+    function setupUI() {
+      // 日付を今日に
+      document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
 
-    /**
-     * 日付入力を今日の日付にセット
-     */
-    function setDefaultDate() {
-      const today = new Date().toISOString().split('T')[0];
-      document.getElementById('inputDate').value = today;
-    }
-
-    /**
-     * タグ選択ボタンをレンダリング
-     */
-    function renderTagButtons() {
-      const container = document.getElementById('tagContainer');
-      container.innerHTML = '';
-
+      // 登録用タグボタン
+      const tagContainer = document.getElementById('tagContainer');
+      tagContainer.innerHTML = '';
       TAGS.forEach(tag => {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'tag-btn';
         btn.textContent = tag;
-        btn.onclick = () => toggleTag(tag, btn);
-        container.appendChild(btn);
+        btn.onclick = () => {
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            btn.classList.remove('active');
+          } else {
+            selectedTags.push(tag);
+            btn.classList.add('active');
+          }
+        };
+        tagContainer.appendChild(btn);
       });
-    }
 
-    /**
-     * タグの選択/非選択を切り替え
-     */
-    function toggleTag(tag, btn) {
-      if (selectedTags.includes(tag)) {
-        selectedTags = selectedTags.filter(t => t !== tag);
-        btn.classList.remove('active');
-      } else {
-        selectedTags.push(tag);
-        btn.classList.add('active');
-      }
-    }
+      // フィルター用タグ
+      renderTagFilter();
 
-/**
-     * 写真ファイルが選択されたときの処理
-     * （容量オーバー防止のため、保存前に自動で縮小・圧縮する）
-     */
-    document.addEventListener('DOMContentLoaded', () => {
+      // 写真選択（圧縮してからプレビュー）
       const photoInput = document.getElementById('inputPhotos');
-      photoInput.addEventListener('change', (e) => {
+      photoInput.onchange = (e) => {
         const files = Array.from(e.target.files);
-
         files.forEach(file => {
           compressImage(file, 1000, 0.7).then(compressed => {
             selectedPhotos.push(compressed);
             renderPhotoPreview();
           });
         });
-      });
-    });
+      };
+    }
 
-    /**
-     * 画像を縮小＆圧縮してBase64(JPEG)で返す
-     * maxSize: 長辺の最大ピクセル数 / quality: 画質(0〜1)
-     */
+    // ============================================
+    // 画像を縮小＆圧縮（長辺1000px, 画質0.7のJPEG）
+    // ============================================
     function compressImage(file, maxSize, quality) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const img = new Image();
           img.onload = () => {
-            // 縮小後のサイズを計算（縦横比を保つ）
-            let w = img.width;
-            let h = img.height;
-            if (w > h && w > maxSize) {
-              h = h * (maxSize / w);
-              w = maxSize;
-            } else if (h >= w && h > maxSize) {
-              w = w * (maxSize / h);
-              h = maxSize;
-            }
-
-            // canvasに描画して圧縮
+            let w = img.width, h = img.height;
+            if (w > h && w > maxSize) { h = h * (maxSize / w); w = maxSize; }
+            else if (h >= w && h > maxSize) { w = w * (maxSize / h); h = maxSize; }
             const canvas = document.createElement('canvas');
-            canvas.width = w;
-            canvas.height = h;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, w, h);
-
-            // JPEG形式・指定画質で書き出す
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
             resolve(canvas.toDataURL('image/jpeg', quality));
           };
           img.src = event.target.result;
@@ -709,358 +387,243 @@
         reader.readAsDataURL(file);
       });
     }
-    /**
-     * 選択した写真をプレビューに表示
-     */
+
     function renderPhotoPreview() {
       const preview = document.getElementById('photoPreview');
       preview.innerHTML = '';
-
       selectedPhotos.forEach((photo, index) => {
-        const photoItem = document.createElement('div');
-        photoItem.className = 'photo-item';
-
+        const item = document.createElement('div');
+        item.className = 'photo-item';
         const img = document.createElement('img');
         img.src = photo;
-
-        const removeBtn = document.createElement('button');
-        removeBtn.type = 'button';
-        removeBtn.className = 'photo-remove-btn';
-        removeBtn.textContent = '✕';
-        removeBtn.onclick = () => removePhoto(index);
-
-        photoItem.appendChild(img);
-        photoItem.appendChild(removeBtn);
-        preview.appendChild(photoItem);
+        const rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'photo-remove-btn'; rm.textContent = '✕';
+        rm.onclick = () => { selectedPhotos.splice(index, 1); renderPhotoPreview(); };
+        item.appendChild(img); item.appendChild(rm);
+        preview.appendChild(item);
       });
     }
 
-    /**
-     * 選択した写真を削除
-     */
-    function removePhoto(index) {
-      selectedPhotos.splice(index, 1);
-      renderPhotoPreview();
-    }
-
-    /**
-     * 記録を保存（フォーム送信）
-     */
-    function saveRecord() {
+    // ============================================
+    // 記録を保存（写真→Storage、本文→Firestore）
+    // ============================================
+    window.saveRecord = async function () {
       const date = document.getElementById('inputDate').value;
       const comment = document.getElementById('inputComment').value;
 
-      // バリデーション
       if (!date || selectedPhotos.length === 0 || !comment.trim()) {
-        alert('⚠️ 日付、写真、コメントはすべて必須です');
-        return;
+        alert('⚠️ 日付・写真・コメントは必須です'); return;
       }
-
       if (selectedTags.length === 0) {
-        alert('⚠️ 最低1つのタグを選択してください');
-        return;
+        alert('⚠️ タグを1つ以上選んでください'); return;
       }
 
-      // 新しい記録を作成
-      const newRecord = {
-        id: Date.now(), // ユニークなID（タイムスタンプ）
-        date: date,
-        photos: [...selectedPhotos], // 写真配列のコピー
-        comment: comment,
-        tags: [...selectedTags], // タグ配列のコピー
-        createdAt: new Date().toISOString() // 作成日時
-      };
+      showLoading('保存しています...');
+      try {
+        const recordId = 'rec_' + Date.now();
+        const uid = currentUser.uid;
 
-      // 記録を配列に追加（最新順）
-      records.unshift(newRecord);
+        // 写真をStorageにアップロードしてURLを集める
+        const photoUrls = [];
+        for (let i = 0; i < selectedPhotos.length; i++) {
+          const path = `users/${uid}/${recordId}/photo_${i}.jpg`;
+          const storageRef = ref(storage, path);
+          // Base64(dataURL)のまま保存
+          await uploadString(storageRef, selectedPhotos[i], 'data_url');
+          const url = await getDownloadURL(storageRef);
+          photoUrls.push({ url, path });
+        }
 
-      // ローカルストレージに保存
-      saveRecords();
+        // 本文をFirestoreに保存
+        const recordRef = doc(db, `users/${uid}/records/${recordId}`);
+        await setDoc(recordRef, {
+          date: date,
+          comment: comment,
+          tags: selectedTags,
+          photos: photoUrls,
+          createdAt: new Date().toISOString()
+        });
 
-      // UIをリセット
-      resetForm();
+        hideLoading();
+        resetForm();
+        await loadRecords();
+        showTimeline();
+        alert('✅ 記録を保存しました！');
+      } catch (err) {
+        hideLoading();
+        alert('保存に失敗しました: ' + err.message);
+        console.error(err);
+      }
+    };
 
-      // タイムラインに切り替え
-      toggleView();
-
-      alert('✅ 記録を保存しました！');
-      console.log('💾 新規記録を保存:', newRecord);
-    }
-
-    /**
-     * フォームをリセット
-     */
-    function resetForm() {
+    window.resetForm = function () {
       document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('inputPhotos').value = '';
       document.getElementById('inputComment').value = '';
       selectedPhotos = [];
       selectedTags = [];
       renderPhotoPreview();
-      renderTagButtons();
+      // タグボタンの選択解除
+      document.querySelectorAll('#tagContainer .tag-btn').forEach(b => b.classList.remove('active'));
+    };
+
+    // ============================================
+    // 記録を読み込む（Firestoreから）
+    // ============================================
+    async function loadRecords() {
+      if (!currentUser) return;
+      try {
+        const uid = currentUser.uid;
+        const q = query(collection(db, `users/${uid}/records`), orderBy('date', 'desc'));
+        const snap = await getDocs(q);
+        records = [];
+        snap.forEach(d => records.push({ id: d.id, ...d.data() }));
+        document.getElementById('recordCount').textContent = records.length;
+        renderTimeline();
+      } catch (err) {
+        console.error('読み込み失敗:', err);
+      }
     }
 
     // ============================================
-    // タイムラインビュー関連の関数
+    // 削除（Firestoreの本文＋Storageの写真）
     // ============================================
+    window.deleteRecord = async function (id) {
+      if (!confirm('⚠️ この記録を削除しますか？')) return;
+      showLoading('削除しています...');
+      try {
+        const uid = currentUser.uid;
+        const rec = records.find(r => r.id === id);
+        // 写真を削除
+        if (rec && rec.photos) {
+          for (const p of rec.photos) {
+            try { await deleteObject(ref(storage, p.path)); } catch (e) { /* 無ければ無視 */ }
+          }
+        }
+        // 本文を削除
+        await deleteDoc(doc(db, `users/${uid}/records/${id}`));
+        hideLoading();
+        await loadRecords();
+        alert('✅ 削除しました');
+      } catch (err) {
+        hideLoading();
+        alert('削除に失敗しました: ' + err.message);
+        console.error(err);
+      }
+    };
 
-    /**
-     * タグフィルターボタンをレンダリング
-     */
+    // ============================================
+    // タイムライン表示
+    // ============================================
     function renderTagFilter() {
       const container = document.getElementById('tagFilter');
       container.innerHTML = '';
-
-      // 「すべて」ボタン
-      const allBtn = document.createElement('button');
-      allBtn.className = 'filter-tag active';
-      allBtn.textContent = 'すべて';
-      allBtn.onclick = () => setFilterTag(null);
-      container.appendChild(allBtn);
-
-      // タグボタン
+      const all = document.createElement('button');
+      all.className = 'filter-tag' + (selectedFilter === null ? ' active' : '');
+      all.textContent = 'すべて';
+      all.onclick = () => { selectedFilter = null; renderTagFilter(); renderTimeline(); };
+      container.appendChild(all);
       TAGS.forEach(tag => {
         const btn = document.createElement('button');
-        btn.className = 'filter-tag';
+        btn.className = 'filter-tag' + (selectedFilter === tag ? ' active' : '');
         btn.textContent = tag;
-        btn.onclick = () => setFilterTag(tag);
+        btn.onclick = () => { selectedFilter = tag; renderTagFilter(); renderTimeline(); };
         container.appendChild(btn);
       });
     }
 
-    /**
-     * フィルタータグを設定してタイムラインを再描画
-     */
-    function setFilterTag(tag) {
-      selectedFilter = tag;
-      renderTagFilter(); // ボタンの状態を更新
-      renderTimeline(); // タイムラインを再描画
-    }
-
-    /**
-     * 月をセットして表示を更新
-     */
     function updateMonthDisplay() {
-      const options = { year: 'numeric', month: 'long' };
-      const monthStr = currentMonth.toLocaleDateString('ja-JP', options);
-      document.getElementById('monthDisplay').textContent = monthStr;
-      renderTimeline();
+      const opt = { year: 'numeric', month: 'long' };
+      document.getElementById('monthDisplay').textContent = currentMonth.toLocaleDateString('ja-JP', opt);
     }
+    window.prevMonth = function () { currentMonth.setMonth(currentMonth.getMonth() - 1); updateMonthDisplay(); renderTimeline(); };
+    window.nextMonth = function () { currentMonth.setMonth(currentMonth.getMonth() + 1); updateMonthDisplay(); renderTimeline(); };
 
-    /**
-     * 前月を表示
-     */
-    function prevMonth() {
-      currentMonth.setMonth(currentMonth.getMonth() - 1);
+    function renderTimeline() {
       updateMonthDisplay();
-    }
-
-    /**
-     * 翌月を表示
-     */
-    function nextMonth() {
-      currentMonth.setMonth(currentMonth.getMonth() + 1);
-      updateMonthDisplay();
-    }
-
-    /**
-     * 記録をフィルタリング
-     */
-    function getFilteredRecords() {
-      return records.filter(record => {
-        // 月でフィルター
-        const recordDate = new Date(record.date);
-        const isSameMonth =
-          recordDate.getFullYear() === currentMonth.getFullYear() &&
-          recordDate.getMonth() === currentMonth.getMonth();
-
-        if (!isSameMonth) return false;
-
-        // タグでフィルター
-        if (selectedFilter) {
-          return record.tags.includes(selectedFilter);
-        }
-
+      const filtered = records.filter(r => {
+        const d = new Date(r.date);
+        const sameMonth = d.getFullYear() === currentMonth.getFullYear() && d.getMonth() === currentMonth.getMonth();
+        if (!sameMonth) return false;
+        if (selectedFilter) return r.tags && r.tags.includes(selectedFilter);
         return true;
       });
-    }
 
-    /**
-     * タイムラインをレンダリング
-     */
-    function renderTimeline() {
-      const filtered = getFilteredRecords();
       const container = document.getElementById('recordsList');
-
       if (filtered.length === 0) {
         container.innerHTML = '<p class="empty-message">📭 この月に記録がありません</p>';
         return;
       }
-
       container.innerHTML = '';
-
-      filtered.forEach(record => {
+      filtered.forEach(rec => {
         const card = document.createElement('div');
         card.className = 'record-card';
-
-        // 日付表示（日本語フォーマット）
-        const date = new Date(record.date);
-        const dateStr = date.toLocaleDateString('ja-JP');
-
-        // タグ表示
-        const tagsHTML = record.tags
-          .map(tag => `<span class="record-tag">${tag}</span>`)
-          .join('');
-
-        // 写真表示
-        const photosHTML = record.photos
-          .map(photo => `<img src="${photo}" class="record-photo" onclick="openPhotoModal('${photo}')">`)
-          .join('');
-
-        // カード内容を構築
+        const dateStr = new Date(rec.date).toLocaleDateString('ja-JP');
+        const tagsHTML = (rec.tags || []).map(t => `<span class="record-tag">${escapeHtml(t)}</span>`).join('');
+        const photosHTML = (rec.photos || []).map(p => `<img src="${p.url}" class="record-photo">`).join('');
         card.innerHTML = `
           <div class="record-header">
             <span class="record-date">📅 ${dateStr}</span>
             <div class="record-tags">${tagsHTML}</div>
           </div>
           <div class="record-photos">${photosHTML}</div>
-          <p class="record-comment">${escapeHtml(record.comment)}</p>
-          <button class="record-delete" onclick="deleteRecord(${record.id})">🗑️ 削除</button>
+          <p class="record-comment">${escapeHtml(rec.comment || '')}</p>
+          <button class="record-delete" data-id="${rec.id}">🗑️ 削除</button>
         `;
-
         container.appendChild(card);
       });
-
-      updateRecordCount();
+      // 写真クリックで拡大・削除ボタン
+      container.querySelectorAll('.record-photo').forEach(img => {
+        img.onclick = () => openPhotoModal(img.src);
+      });
+      container.querySelectorAll('.record-delete').forEach(btn => {
+        btn.onclick = () => window.deleteRecord(btn.getAttribute('data-id'));
+      });
     }
 
-    /**
-     * HTMLエスケープ（XSS対策）
-     */
     function escapeHtml(text) {
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return text.replace(/[&<>"']/g, m => map[m]);
-    }
-
-    /**
-     * 記録を削除
-     */
-    function deleteRecord(id) {
-      if (!confirm('⚠️ この記録を削除しますか？')) return;
-
-      records = records.filter(r => r.id !== id);
-      saveRecords();
-      renderTimeline();
-      alert('✅ 削除しました');
-      console.log('🗑️ 記録を削除:', id);
-    }
-
-    /**
-     * 写真を拡大表示
-     */
-    function openPhotoModal(photoSrc) {
-      const modal = document.getElementById('photoModal');
-      const img = document.getElementById('modalImg');
-      img.src = photoSrc;
-      modal.classList.add('active');
-    }
-
-    /**
-     * 写真モーダルを閉じる
-     */
-    function closePhotoModal() {
-      document.getElementById('photoModal').classList.remove('active');
-    }
-
-    /**
-     * 記録数を更新表示
-     */
-    function updateRecordCount() {
-      document.getElementById('recordCount').textContent = records.length;
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(text).replace(/[&<>"']/g, m => map[m]);
     }
 
     // ============================================
     // ビュー切り替え
     // ============================================
-
-    /**
-     * 登録フォーム ↔ タイムラインを切り替え
-     */
-    function toggleView() {
-      const formSection = document.getElementById('formSection');
-      const timelineSection = document.getElementById('timelineSection');
-      const toggleText = document.getElementById('toggleText');
-
+    window.toggleView = function () {
       formSection.classList.toggle('active');
       timelineSection.classList.toggle('active');
-
+      const t = document.getElementById('toggleText');
       if (formSection.classList.contains('active')) {
-        toggleText.textContent = '📖 タイムライン';
+        t.textContent = '📖 タイムライン';
       } else {
-        toggleText.textContent = '➕ 新規登録';
-        updateMonthDisplay(); // タイムライン切り替え時に月表示を更新
+        t.textContent = '➕ 新規登録';
+        renderTimeline();
       }
+    };
+    function showTimeline() {
+      formSection.classList.remove('active');
+      timelineSection.classList.add('active');
+      document.getElementById('toggleText').textContent = '➕ 新規登録';
+      renderTimeline();
     }
 
-    // ============================================
-    // ローカルストレージ操作
-    // ============================================
+    // 写真拡大
+    window.openPhotoModal = function (src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('photoModal').classList.add('active');
+    };
+    window.closePhotoModal = function () {
+      document.getElementById('photoModal').classList.remove('active');
+    };
 
-    /**
-     * 記録をローカルストレージに保存
-     */
-    function saveRecords() {
-      const json = JSON.stringify(records);
-      localStorage.setItem('diyRecords', json);
-      console.log('💾 ローカルストレージに保存しました');
+    // ローディング
+    function showLoading(text) {
+      document.getElementById('loadingText').textContent = text || '処理中...';
+      document.getElementById('loadingOverlay').classList.add('active');
     }
-
-    /**
-     * ローカルストレージから記録を読み込む
-     */
-    function loadRecords() {
-      const json = localStorage.getItem('diyRecords');
-      if (json) {
-        try {
-          records = JSON.parse(json);
-          console.log('📂 ローカルストレージから読み込み:', records.length, '件');
-        } catch (e) {
-          console.error('❌ データの読み込みに失敗しました:', e);
-          records = [];
-        }
-      }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
     }
-
-    // ============================================
-    // 補足：カスタマイズ方法
-    // ============================================
-    /*
-    
-    【タグを追加する場合】
-    4行目の「const TAGS = [...]」を編集
-    例：const TAGS = ['作品集', '計画', 'やってみたい', 'スキル', '治具', '工具', '新しいタグ'];
-
-    【色を変える場合】
-    上部のCSSを編集
-    例：.btn-primary { background-color: #e74c3c; } ← 色コードを変更
-
-    【写真の表示数を変える場合】
-    CSSの「grid-template-columns」を編集
-    例：.photo-preview { grid-template-columns: repeat(3, 1fr); } ← 3列に変更
-
-    【データをバックアップする方法】
-    ブラウザのデベロッパーツール（F12）→ Console に以下を貼り付け：
-    console.log(JSON.stringify(JSON.parse(localStorage.getItem('diyRecords')), null, 2));
-    出力を全選択→コピーして、テキストファイルに保存
-
-    */
   </script>
-
 </body>
 </html>
