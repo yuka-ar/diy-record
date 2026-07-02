@@ -63,7 +63,7 @@
     .section-title { font-size: 18px; font-weight: bold; margin-bottom: 16px; }
 
     /* フォーム */
-    .form-group {
+    .form-group {F
       margin-bottom: 16px; background: white; padding: 12px; border-radius: 4px;
     }
     .form-group label {
@@ -150,10 +150,8 @@
   <!-- ヘッダー -->
   <div class="header">
     <h1>🔨 maker-journal</h1>
-    <div class="header-right" id="headerRight" style="display:none;">
-      <span class="user-name" id="userName"></span>
-      <button class="btn btn-primary" onclick="toggleView()"><span id="toggleText">➕ 新規登録</span></button>
-      <button class="btn btn-ghost" onclick="doLogout()">ログアウト</button>
+  <div class="header-right" id="headerRight" style="display:none;">
+      <button class="btn btn-primary" onclick="toggleView()"><span id="toggleText">➕ ポストを追加</span></button>
     </div>
   </div>
 
@@ -596,14 +594,14 @@
       if (formSection.classList.contains('active')) {
         t.textContent = '📖 タイムライン';
       } else {
-        t.textContent = '➕ 新規登録';
+        t.textContent = '➕ ポストを追加';
         renderTimeline();
       }
     };
     function showTimeline() {
       formSection.classList.remove('active');
       timelineSection.classList.add('active');
-      document.getElementById('toggleText').textContent = '➕ 新規登録';
+      document.getElementById('toggleText').textContent = '➕ ポストを追加';
       renderTimeline();
     }
 
