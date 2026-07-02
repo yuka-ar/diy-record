@@ -655,8 +655,9 @@
       }
     }
 
-    /**
+/**
      * 写真ファイルが選択されたときの処理
+     * （容量オーバー防止のため、保存前に自動で縮小・圧縮する）
      */
     document.addEventListener('DOMContentLoaded', () => {
       const photoInput = document.getElementById('inputPhotos');
@@ -664,17 +665,50 @@
         const files = Array.from(e.target.files);
 
         files.forEach(file => {
-          // ファイルをBase64に変換（ブラウザに保存するため）
-          const reader = new FileReader();
-          reader.onload = (event) => {
-            selectedPhotos.push(event.target.result);
+          compressImage(file, 1000, 0.7).then(compressed => {
+            selectedPhotos.push(compressed);
             renderPhotoPreview();
-          };
-          reader.readAsDataURL(file);
+          });
         });
       });
     });
 
+    /**
+     * 画像を縮小＆圧縮してBase64(JPEG)で返す
+     * maxSize: 長辺の最大ピクセル数 / quality: 画質(0〜1)
+     */
+    function compressImage(file, maxSize, quality) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            // 縮小後のサイズを計算（縦横比を保つ）
+            let w = img.width;
+            let h = img.height;
+            if (w > h && w > maxSize) {
+              h = h * (maxSize / w);
+              w = maxSize;
+            } else if (h >= w && h > maxSize) {
+              w = w * (maxSize / h);
+              h = maxSize;
+            }
+
+            // canvasに描画して圧縮
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+
+            // JPEG形式・指定画質で書き出す
+            resolve(canvas.toDataURL('image/jpeg', quality));
+          };
+          img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
     /**
      * 選択した写真をプレビューに表示
      */
