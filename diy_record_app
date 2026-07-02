@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔨 DIY記録アプリ</title>
+  <style>
+    /* ============================================
+       全体的なスタイル設定
+       ============================================ */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'メイリオ', sans-serif;
+      background-color: #f5f5f5;
+      color: #2c3e50;
+    }
+
+    /* ============================================
+       ヘッダー（タイトルとボタン）
+       ============================================ */
+    .header {
+      background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+      color: white;
+      padding: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: #2980b9;
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #c0392b;
+    }
+
+    .btn-success {
+      background-color: #27ae60;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #229954;
+    }
+
+    /* ============================================
+       セクション（登録フォーム / タイムライン）
+       ============================================ */
+    .section {
+      display: none;
+      padding: 16px;
+    }
+
+    .section.active {
+      display: block;
+    }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      color: #2c3e50;
+    }
+
+    /* ============================================
+       フォーム関連
+       ============================================ */
+    .form-group {
+      margin-bottom: 16px;
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: #2c3e50;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #bdc3c7;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+
+    /* ============================================
+       写真プレビュー
+       ============================================ */
+    .photo-preview {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .photo-item {
+      position: relative;
+      width: 100%;
+      padding-top: 100%; /* 正方形にする */
+    }
+
+    .photo-item img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+    }
+
+    .photo-remove-btn {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .photo-remove-btn:hover {
+      background: rgba(0, 0, 0, 0.8);
+    }
+
+    /* ============================================
+       タグ選択
+       ============================================ */
+    .tag-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .tag-btn {
+      padding: 10px;
+      border: 2px solid #bdc3c7;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      font-weight: 500;
+    }
+
+    .tag-btn:hover {
+      border-color: #3498db;
+    }
+
+    .tag-btn.active {
+      background-color: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+
+    /* ============================================
+       送信ボタン
+       ============================================ */
+    .submit-section {
+      display: flex;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .submit-section button {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    /* ============================================
+       タイムラインビュー
+       ============================================ */
+    .timeline-controls {
+      background: white;
+      padding: 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+
+    /* 月選択 */
+    .month-selector {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .month-selector button {
+      background: #ecf0f1;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background 0.2s;
+    }
+
+    .month-selector button:hover {
+      background: #bdc3c7;
+    }
+
+    .month-display {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    /* タグフィルター */
+    .tag-filter {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    .filter-tag {
+      padding: 8px 12px;
+      background: white;
+      border: 2px solid #bdc3c7;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .filter-tag:hover {
+      border-color: #3498db;
+    }
+
+    .filter-tag.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+
+    /* ============================================
+       記録カード
+       ============================================ */
+    .records-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .record-card {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.2s;
+    }
+
+    .record-card:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    /* カード上部：日付とタグ */
+    .record-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .record-date {
+      font-size: 12px;
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+
+    .record-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .record-tag {
+      background: #ecf0f1;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #2c3e50;
+      font-weight: 500;
+    }
+
+    /* カード内：写真ギャラリー */
+    .record-photos {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .record-photo {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .record-photo:hover {
+      transform: scale(1.02);
+    }
+
+    /* カード内：コメント */
+    .record-comment {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #2c3e50;
+      margin-bottom: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* カード内：削除ボタン */
+    .record-delete {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .record-delete:hover {
+      background: #c0392b;
+    }
+
+    /* ============================================
+       空状態メッセージ
+       ============================================ */
+    .empty-message {
+      text-align: center;
+      color: #95a5a6;
+      padding: 32px 16px;
+      font-size: 14px;
+    }
+
+    /* ============================================
+       フッター
+       ============================================ */
+    .footer {
+      padding: 16px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 12px;
+      border-top: 1px solid #ecf0f1;
+      margin-top: 16px;
+    }
+
+    /* ============================================
+       写真拡大表示（モーダル）
+       ============================================ */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================
+       レスポンシブ対応
+       ============================================ */
+    @media (min-width: 768px) {
+      .tag-container {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .photo-preview {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .record-photos {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================
+       ヘッダー
+       ============================================ -->
+  <div class="header">
+    <h1>🔨 DIY記録</h1>
+    <button class="btn btn-primary" onclick="toggleView()">
+      <span id="toggleText">➕ 新規登録</span>
+    </button>
+  </div>
+
+  <!-- ============================================
+       登録フォームセクション
+       ============================================ -->
+  <div id="formSection" class="section active">
+    <h2 class="section-title">新しい記録を追加</h2>
+
+    <!-- 日付入力 -->
+    <div class="form-group">
+      <label for="inputDate">📅 日付</label>
+      <input type="date" id="inputDate">
+    </div>
+
+    <!-- 写真アップロード -->
+    <div class="form-group">
+      <label for="inputPhotos">📸 写真（複数OK）</label>
+      <input type="file" id="inputPhotos" multiple accept="image/*">
+      <div id="photoPreview" class="photo-preview"></div>
+    </div>
+
+    <!-- コメント入力 -->
+    <div class="form-group">
+      <label for="inputComment">📝 コメント</label>
+      <textarea id="inputComment" placeholder="作業内容、感想など..."></textarea>
+    </div>
+
+    <!-- タグ選択 -->
+    <div class="form-group">
+      <label>🏷️ タグ（複数選択可）</label>
+      <div class="tag-container" id="tagContainer"></div>
+    </div>
+
+    <!-- ボタン -->
+    <div class="submit-section">
+      <button class="btn btn-success" onclick="saveRecord()">✅ 記録を保存</button>
+      <button class="btn btn-primary" onclick="resetForm()">🔄 リセット</button>
+    </div>
+  </div>
+
+  <!-- ============================================
+       タイムラインセクション
+       ============================================ -->
+  <div id="timelineSection" class="section">
+    <h2 class="section-title">📖 タイムライン</h2>
+
+    <!-- 月選択とタグフィルター -->
+    <div class="timeline-controls">
+      <!-- 月選択 -->
+      <div class="month-selector">
+        <button onclick="prevMonth()">◀</button>
+        <div class="month-display" id="monthDisplay"></div>
+        <button onclick="nextMonth()">▶</button>
+      </div>
+
+      <!-- タグフィルター -->
+      <div class="tag-filter" id="tagFilter"></div>
+    </div>
+
+    <!-- 記録一覧 -->
+    <div id="recordsList" class="records-list"></div>
+  </div>
+
+  <!-- フッター -->
+  <div class="footer">
+    <p>登録済み記録: <strong id="recordCount">0</strong>件</p>
+  </div>
+
+  <!-- 写真拡大表示用モーダル -->
+  <div id="photoModal" class="modal" onclick="closePhotoModal()">
+    <button class="modal-close" onclick="closePhotoModal()">✕</button>
+    <img id="modalImg" class="modal-img" alt="">
+  </div>
+
+  <!-- ============================================
+       JavaScriptコード（アプリの動作ロジック）
+       ============================================ -->
+  <script>
+    // ============================================
+    // 設定と初期化
+    // ============================================
+
+    // タグ定義（ここでタグを追加/削除できます）
+    const TAGS = ['作品集', '計画', 'やってみたい', 'スキル', '治具', '工具'];
+
+    // アプリの状態を管理する変数
+    let records = []; // 記録一覧
+    let selectedPhotos = []; // 選択中の写真（Base64）
+    let selectedTags = []; // 選択中のタグ
+    let currentMonth = new Date(); // 現在選択中の月
+    let selectedFilter = null; // フィルター中のタグ
+
+    // ============================================
+    // ページ読み込み時の処理
+    // ============================================
+    window.addEventListener('DOMContentLoaded', () => {
+      initializeApp();
+    });
+
+    function initializeApp() {
+      // 1. ローカルストレージからデータを読み込む
+      loadRecords();
+
+      // 2. UIを初期化
+      setDefaultDate();
+      renderTagButtons();
+      renderTagFilter();
+      renderTimeline();
+      updateRecordCount();
+
+      console.log('✅ アプリを初期化しました。登録済み記録:', records.length);
+    }
+
+    // ============================================
+    // フォーム関連の関数
+    // ============================================
+
+    /**
+     * 日付入力を今日の日付にセット
+     */
+    function setDefaultDate() {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('inputDate').value = today;
+    }
+
+    /**
+     * タグ選択ボタンをレンダリング
+     */
+    function renderTagButtons() {
+      const container = document.getElementById('tagContainer');
+      container.innerHTML = '';
+
+      TAGS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'tag-btn';
+        btn.textContent = tag;
+        btn.onclick = () => toggleTag(tag, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    /**
+     * タグの選択/非選択を切り替え
+     */
+    function toggleTag(tag, btn) {
+      if (selectedTags.includes(tag)) {
+        selectedTags = selectedTags.filter(t => t !== tag);
+        btn.classList.remove('active');
+      } else {
+        selectedTags.push(tag);
+        btn.classList.add('active');
+      }
+    }
+
+    /**
+     * 写真ファイルが選択されたときの処理
+     */
+    document.addEventListener('DOMContentLoaded', () => {
+      const photoInput = document.getElementById('inputPhotos');
+      photoInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+
+        files.forEach(file => {
+          // ファイルをBase64に変換（ブラウザに保存するため）
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            selectedPhotos.push(event.target.result);
+            renderPhotoPreview();
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+    });
+
+    /**
+     * 選択した写真をプレビューに表示
+     */
+    function renderPhotoPreview() {
+      const preview = document.getElementById('photoPreview');
+      preview.innerHTML = '';
+
+      selectedPhotos.forEach((photo, index) => {
+        const photoItem = document.createElement('div');
+        photoItem.className = 'photo-item';
+
+        const img = document.createElement('img');
+        img.src = photo;
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'photo-remove-btn';
+        removeBtn.textContent = '✕';
+        removeBtn.onclick = () => removePhoto(index);
+
+        photoItem.appendChild(img);
+        photoItem.appendChild(removeBtn);
+        preview.appendChild(photoItem);
+      });
+    }
+
+    /**
+     * 選択した写真を削除
+     */
+    function removePhoto(index) {
+      selectedPhotos.splice(index, 1);
+      renderPhotoPreview();
+    }
+
+    /**
+     * 記録を保存（フォーム送信）
+     */
+    function saveRecord() {
+      const date = document.getElementById('inputDate').value;
+      const comment = document.getElementById('inputComment').value;
+
+      // バリデーション
+      if (!date || selectedPhotos.length === 0 || !comment.trim()) {
+        alert('⚠️ 日付、写真、コメントはすべて必須です');
+        return;
+      }
+
+      if (selectedTags.length === 0) {
+        alert('⚠️ 最低1つのタグを選択してください');
+        return;
+      }
+
+      // 新しい記録を作成
+      const newRecord = {
+        id: Date.now(), // ユニークなID（タイムスタンプ）
+        date: date,
+        photos: [...selectedPhotos], // 写真配列のコピー
+        comment: comment,
+        tags: [...selectedTags], // タグ配列のコピー
+        createdAt: new Date().toISOString() // 作成日時
+      };
+
+      // 記録を配列に追加（最新順）
+      records.unshift(newRecord);
+
+      // ローカルストレージに保存
+      saveRecords();
+
+      // UIをリセット
+      resetForm();
+
+      // タイムラインに切り替え
+      toggleView();
+
+      alert('✅ 記録を保存しました！');
+      console.log('💾 新規記録を保存:', newRecord);
+    }
+
+    /**
+     * フォームをリセット
+     */
+    function resetForm() {
+      document.getElementById('inputDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('inputPhotos').value = '';
+      document.getElementById('inputComment').value = '';
+      selectedPhotos = [];
+      selectedTags = [];
+      renderPhotoPreview();
+      renderTagButtons();
+    }
+
+    // ============================================
+    // タイムラインビュー関連の関数
+    // ============================================
+
+    /**
+     * タグフィルターボタンをレンダリング
+     */
+    function renderTagFilter() {
+      const container = document.getElementById('tagFilter');
+      container.innerHTML = '';
+
+      // 「すべて」ボタン
+      const allBtn = document.createElement('button');
+      allBtn.className = 'filter-tag active';
+      allBtn.textContent = 'すべて';
+      allBtn.onclick = () => setFilterTag(null);
+      container.appendChild(allBtn);
+
+      // タグボタン
+      TAGS.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'filter-tag';
+        btn.textContent = tag;
+        btn.onclick = () => setFilterTag(tag);
+        container.appendChild(btn);
+      });
+    }
+
+    /**
+     * フィルタータグを設定してタイムラインを再描画
+     */
+    function setFilterTag(tag) {
+      selectedFilter = tag;
+      renderTagFilter(); // ボタンの状態を更新
+      renderTimeline(); // タイムラインを再描画
+    }
+
+    /**
+     * 月をセットして表示を更新
+     */
+    function updateMonthDisplay() {
+      const options = { year: 'numeric', month: 'long' };
+      const monthStr = currentMonth.toLocaleDateString('ja-JP', options);
+      document.getElementById('monthDisplay').textContent = monthStr;
+      renderTimeline();
+    }
+
+    /**
+     * 前月を表示
+     */
+    function prevMonth() {
+      currentMonth.setMonth(currentMonth.getMonth() - 1);
+      updateMonthDisplay();
+    }
+
+    /**
+     * 翌月を表示
+     */
+    function nextMonth() {
+      currentMonth.setMonth(currentMonth.getMonth() + 1);
+      updateMonthDisplay();
+    }
+
+    /**
+     * 記録をフィルタリング
+     */
+    function getFilteredRecords() {
+      return records.filter(record => {
+        // 月でフィルター
+        const recordDate = new Date(record.date);
+        const isSameMonth =
+          recordDate.getFullYear() === currentMonth.getFullYear() &&
+          recordDate.getMonth() === currentMonth.getMonth();
+
+        if (!isSameMonth) return false;
+
+        // タグでフィルター
+        if (selectedFilter) {
+          return record.tags.includes(selectedFilter);
+        }
+
+        return true;
+      });
+    }
+
+    /**
+     * タイムラインをレンダリング
+     */
+    function renderTimeline() {
+      const filtered = getFilteredRecords();
+      const container = document.getElementById('recordsList');
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="empty-message">📭 この月に記録がありません</p>';
+        return;
+      }
+
+      container.innerHTML = '';
+
+      filtered.forEach(record => {
+        const card = document.createElement('div');
+        card.className = 'record-card';
+
+        // 日付表示（日本語フォーマット）
+        const date = new Date(record.date);
+        const dateStr = date.toLocaleDateString('ja-JP');
+
+        // タグ表示
+        const tagsHTML = record.tags
+          .map(tag => `<span class="record-tag">${tag}</span>`)
+          .join('');
+
+        // 写真表示
+        const photosHTML = record.photos
+          .map(photo => `<img src="${photo}" class="record-photo" onclick="openPhotoModal('${photo}')">`)
+          .join('');
+
+        // カード内容を構築
+        card.innerHTML = `
+          <div class="record-header">
+            <span class="record-date">📅 ${dateStr}</span>
+            <div class="record-tags">${tagsHTML}</div>
+          </div>
+          <div class="record-photos">${photosHTML}</div>
+          <p class="record-comment">${escapeHtml(record.comment)}</p>
+          <button class="record-delete" onclick="deleteRecord(${record.id})">🗑️ 削除</button>
+        `;
+
+        container.appendChild(card);
+      });
+
+      updateRecordCount();
+    }
+
+    /**
+     * HTMLエスケープ（XSS対策）
+     */
+    function escapeHtml(text) {
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
+
+    /**
+     * 記録を削除
+     */
+    function deleteRecord(id) {
+      if (!confirm('⚠️ この記録を削除しますか？')) return;
+
+      records = records.filter(r => r.id !== id);
+      saveRecords();
+      renderTimeline();
+      alert('✅ 削除しました');
+      console.log('🗑️ 記録を削除:', id);
+    }
+
+    /**
+     * 写真を拡大表示
+     */
+    function openPhotoModal(photoSrc) {
+      const modal = document.getElementById('photoModal');
+      const img = document.getElementById('modalImg');
+      img.src = photoSrc;
+      modal.classList.add('active');
+    }
+
+    /**
+     * 写真モーダルを閉じる
+     */
+    function closePhotoModal() {
+      document.getElementById('photoModal').classList.remove('active');
+    }
+
+    /**
+     * 記録数を更新表示
+     */
+    function updateRecordCount() {
+      document.getElementById('recordCount').textContent = records.length;
+    }
+
+    // ============================================
+    // ビュー切り替え
+    // ============================================
+
+    /**
+     * 登録フォーム ↔ タイムラインを切り替え
+     */
+    function toggleView() {
+      const formSection = document.getElementById('formSection');
+      const timelineSection = document.getElementById('timelineSection');
+      const toggleText = document.getElementById('toggleText');
+
+      formSection.classList.toggle('active');
+      timelineSection.classList.toggle('active');
+
+      if (formSection.classList.contains('active')) {
+        toggleText.textContent = '📖 タイムライン';
+      } else {
+        toggleText.textContent = '➕ 新規登録';
+        updateMonthDisplay(); // タイムライン切り替え時に月表示を更新
+      }
+    }
+
+    // ============================================
+    // ローカルストレージ操作
+    // ============================================
+
+    /**
+     * 記録をローカルストレージに保存
+     */
+    function saveRecords() {
+      const json = JSON.stringify(records);
+      localStorage.setItem('diyRecords', json);
+      console.log('💾 ローカルストレージに保存しました');
+    }
+
+    /**
+     * ローカルストレージから記録を読み込む
+     */
+    function loadRecords() {
+      const json = localStorage.getItem('diyRecords');
+      if (json) {
+        try {
+          records = JSON.parse(json);
+          console.log('📂 ローカルストレージから読み込み:', records.length, '件');
+        } catch (e) {
+          console.error('❌ データの読み込みに失敗しました:', e);
+          records = [];
+        }
+      }
+    }
+
+    // ============================================
+    // 補足：カスタマイズ方法
+    // ============================================
+    /*
+    
+    【タグを追加する場合】
+    4行目の「const TAGS = [...]」を編集
+    例：const TAGS = ['作品集', '計画', 'やってみたい', 'スキル', '治具', '工具', '新しいタグ'];
+
+    【色を変える場合】
+    上部のCSSを編集
+    例：.btn-primary { background-color: #e74c3c; } ← 色コードを変更
+
+    【写真の表示数を変える場合】
+    CSSの「grid-template-columns」を編集
+    例：.photo-preview { grid-template-columns: repeat(3, 1fr); } ← 3列に変更
+
+    【データをバックアップする方法】
+    ブラウザのデベロッパーツール（F12）→ Console に以下を貼り付け：
+    console.log(JSON.stringify(JSON.parse(localStorage.getItem('diyRecords')), null, 2));
+    出力を全選択→コピーして、テキストファイルに保存
+
+    */
+  </script>
+
+</body>
+</html>
