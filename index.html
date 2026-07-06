@@ -119,6 +119,8 @@
     .record-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
     .record-photo { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; }
     .record-comment { font-size: 14px; line-height: 1.6; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+    .record-actions { display: flex; gap: 8px; }
+    .record-edit { background: #3498db; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
     .record-delete { background: #e74c3c; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; }
 
     .empty-message { text-align: center; color: #95a5a6; padding: 32px 16px; font-size: 14px; }
@@ -167,7 +169,7 @@
 
   <!-- 登録フォーム -->
   <div id="formSection" class="section">
-    <h2 class="section-title">新しい記録を追加</h2>
+    <h2 class="section-title" id="formSectionTitle">新しい記録を追加</h2>
 
     <div class="form-group">
       <label for="inputDate">📅 日付</label>
@@ -192,7 +194,7 @@
 
 
     <div class="submit-section">
-      <button class="btn btn-success" onclick="saveRecord()">✅ 記録を保存</button>
+      <button class="btn btn-success" onclick="saveRecord()"><span id="saveBtnText">✅ 記録を保存</span></button>
       <button class="btn btn-primary" onclick="resetForm()">🔄 リセット</button>
     </div>
   </div>
@@ -272,7 +274,10 @@
     // 状態
     let currentUser = null;
     let records = [];
-    let selectedPhotos = [];   // 圧縮済みBase64の配列
+    let selectedPhotos = [];      // 新規追加分（圧縮済みBase64の配列）
+    let existingPhotos = [];      // 編集中の記録がもともと持っていた写真（{url, path}の配列）
+    let removedExistingPhotos = []; // 編集中に削除された既存写真（保存時にStorageから消す）
+    let editingRecordId = null;   // 編集中のレコードID（新規作成時はnull）
     let selectedTags = [];
     let currentMonth = new Date();
     let selectedFilter = null;
@@ -386,9 +391,29 @@
       });
     }
 
+    // 既存写真（Storage済み）＋新規写真（未アップロードのBase64）を両方プレビュー表示
     function renderPhotoPreview() {
       const preview = document.getElementById('photoPreview');
       preview.innerHTML = '';
+
+      // 既存写真（編集中のみ存在）
+      existingPhotos.forEach((photo, index) => {
+        const item = document.createElement('div');
+        item.className = 'photo-item';
+        const img = document.createElement('img');
+        img.src = photo.url;
+        const rm = document.createElement('button');
+        rm.type = 'button'; rm.className = 'photo-remove-btn'; rm.textContent = '✕';
+        rm.onclick = () => {
+          removedExistingPhotos.push(photo);
+          existingPhotos.splice(index, 1);
+          renderPhotoPreview();
+        };
+        item.appendChild(img); item.appendChild(rm);
+        preview.appendChild(item);
+      });
+
+      // 新規追加写真
       selectedPhotos.forEach((photo, index) => {
         const item = document.createElement('div');
         item.className = 'photo-item';
@@ -403,55 +428,102 @@
     }
 
     // ============================================
-    // 記録を保存（写真→Storage、本文→Firestore）
+    // 記録を保存（新規作成／編集更新の両方に対応）
     // ============================================
     window.saveRecord = async function () {
       const date = document.getElementById('inputDate').value;
       const comment = document.getElementById('inputComment').value;
+      const totalPhotoCount = existingPhotos.length + selectedPhotos.length;
 
-      if (!date || selectedPhotos.length === 0 || !comment.trim()) {
+      if (!date || totalPhotoCount === 0 || !comment.trim()) {
         alert('⚠️ 日付・写真・コメントは必須です'); return;
       }
       if (selectedTags.length === 0) {
         alert('⚠️ タグを1つ以上選んでください'); return;
       }
 
-      showLoading('保存しています...');
+      const wasEditing = !!editingRecordId;
+      showLoading(wasEditing ? '更新しています...' : '保存しています...');
       try {
-        const recordId = 'rec_' + Date.now();
         const uid = currentUser.uid;
+        const recordId = editingRecordId || ('rec_' + Date.now());
 
-        // 写真をStorageにアップロードしてURLを集める
-        const photoUrls = [];
-        for (let i = 0; i < selectedPhotos.length; i++) {
-          const path = `users/${uid}/${recordId}/photo_${i}.jpg`;
-          const storageRef = ref(storage, path);
-          // Base64(dataURL)のまま保存
-          await uploadString(storageRef, selectedPhotos[i], 'data_url');
-          const url = await getDownloadURL(storageRef);
-          photoUrls.push({ url, path });
+        // 編集で削除された既存写真をStorageから削除
+        for (const p of removedExistingPhotos) {
+          try { await deleteObject(ref(storage, p.path)); } catch (e) { /* 無ければ無視 */ }
         }
 
-        // 本文をFirestoreに保存
-        const recordRef = doc(db, `users/${uid}/records/${recordId}`);
-        await setDoc(recordRef, {
+        // 新規追加された写真をStorageにアップロード
+        const newPhotoUrls = [];
+        for (let i = 0; i < selectedPhotos.length; i++) {
+          const path = `users/${uid}/${recordId}/photo_${Date.now()}_${i}.jpg`;
+          const storageRef = ref(storage, path);
+          await uploadString(storageRef, selectedPhotos[i], 'data_url');
+          const url = await getDownloadURL(storageRef);
+          newPhotoUrls.push({ url, path });
+        }
+
+        // 既存写真（残っているもの）＋新規写真
+        const photoUrls = [...existingPhotos, ...newPhotoUrls];
+
+        // createdAtは編集時には元の値を引き継ぐ
+        const originalRecord = wasEditing ? records.find(r => r.id === editingRecordId) : null;
+
+        const dataToSave = {
           date: date,
           comment: comment,
           tags: selectedTags,
           photos: photoUrls,
-          createdAt: new Date().toISOString()
-        });
+          createdAt: (originalRecord && originalRecord.createdAt) || new Date().toISOString()
+        };
+        if (wasEditing) {
+          dataToSave.updatedAt = new Date().toISOString();
+        }
+
+        const recordRef = doc(db, `users/${uid}/records/${recordId}`);
+        await setDoc(recordRef, dataToSave);
 
         hideLoading();
         resetForm();
         await loadRecords();
         showTimeline();
-        alert('✅ 記録を保存しました！');
+        alert(wasEditing ? '✅ 記録を更新しました！' : '✅ 記録を保存しました！');
       } catch (err) {
         hideLoading();
-        alert('保存に失敗しました: ' + err.message);
+        alert((wasEditing ? '更新' : '保存') + 'に失敗しました: ' + err.message);
         console.error(err);
       }
+    };
+
+    // 既存の記録をフォームに読み込んで編集モードにする
+    window.editRecord = function (id) {
+      const rec = records.find(r => r.id === id);
+      if (!rec) return;
+
+      editingRecordId = id;
+      existingPhotos = [...(rec.photos || [])];
+      removedExistingPhotos = [];
+      selectedPhotos = [];
+      selectedTags = [...(rec.tags || [])];
+
+      document.getElementById('inputDate').value = rec.date || '';
+      document.getElementById('inputComment').value = rec.comment || '';
+      document.getElementById('inputPhotos').value = '';
+      renderPhotoPreview();
+
+      // タグボタンの見た目を、記録に合わせて反映
+      document.querySelectorAll('#tagContainer .tag-btn').forEach(b => {
+        b.classList.toggle('active', selectedTags.includes(b.textContent));
+      });
+
+      // フォームの見た目を「編集モード」に
+      document.getElementById('formSectionTitle').textContent = '記録を編集';
+      document.getElementById('saveBtnText').textContent = '✅ 更新する';
+
+      // フォーム画面へ切り替え
+      formSection.classList.add('active');
+      timelineSection.classList.remove('active');
+      document.getElementById('toggleText').textContent = '📖 タイムライン';
     };
 
     window.resetForm = function () {
@@ -460,9 +532,15 @@
       document.getElementById('inputComment').value = '';
       selectedPhotos = [];
       selectedTags = [];
+      existingPhotos = [];
+      removedExistingPhotos = [];
+      editingRecordId = null;
       renderPhotoPreview();
       // タグボタンの選択解除
       document.querySelectorAll('#tagContainer .tag-btn').forEach(b => b.classList.remove('active'));
+      // フォームの見た目を「新規追加」に戻す
+      document.getElementById('formSectionTitle').textContent = '新しい記録を追加';
+      document.getElementById('saveBtnText').textContent = '✅ 記録を保存';
     };
 
     // ============================================
@@ -500,6 +578,8 @@
         }
         // 本文を削除
         await deleteDoc(doc(db, `users/${uid}/records/${id}`));
+        // 削除した記録を編集中だった場合はフォームをリセット
+        if (editingRecordId === id) { resetForm(); }
         hideLoading();
         await loadRecords();
         alert('✅ 削除しました');
@@ -566,13 +646,19 @@
           </div>
           <div class="record-photos">${photosHTML}</div>
           <p class="record-comment">${escapeHtml(rec.comment || '')}</p>
-          <button class="record-delete" data-id="${rec.id}">🗑️ 削除</button>
+          <div class="record-actions">
+            <button class="record-edit" data-edit-id="${rec.id}">✏️ 編集</button>
+            <button class="record-delete" data-id="${rec.id}">🗑️ 削除</button>
+          </div>
         `;
         container.appendChild(card);
       });
-      // 写真クリックで拡大・削除ボタン
+      // 写真クリックで拡大・編集ボタン・削除ボタン
       container.querySelectorAll('.record-photo').forEach(img => {
         img.onclick = () => openPhotoModal(img.src);
+      });
+      container.querySelectorAll('.record-edit').forEach(btn => {
+        btn.onclick = () => window.editRecord(btn.getAttribute('data-edit-id'));
       });
       container.querySelectorAll('.record-delete').forEach(btn => {
         btn.onclick = () => window.deleteRecord(btn.getAttribute('data-id'));
@@ -595,6 +681,8 @@
         t.textContent = '📖 タイムライン';
       } else {
         t.textContent = '➕ ポストを追加';
+        // 手動でタイムラインに切り替えたときは編集状態をリセットしておく
+        if (editingRecordId) { resetForm(); }
         renderTimeline();
       }
     };
